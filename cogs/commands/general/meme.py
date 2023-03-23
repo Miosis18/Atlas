@@ -1,6 +1,9 @@
 import discord
 import os
 import yaml
+import asyncpraw
+import random
+import datetime as dt
 from discord import app_commands
 from discord.ext import commands
 
@@ -26,8 +29,8 @@ class Meme(commands.Cog):
     @app_commands.guilds(discord.Object(id=GUILD_ID))
     async def meme(self, interaction: discord.Interaction) -> None:
 
+        # Come back to this command at a later date.
         pass
-
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Meme(bot))

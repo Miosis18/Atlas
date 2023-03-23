@@ -6,3 +6,4 @@ SQLAlchemy~=2.0.6
 requests~=2.28.2
 pyfiglet~=0.8.post1
 upsidedown~=0.4
+asyncpraw~=7.7.0
