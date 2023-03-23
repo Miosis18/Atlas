@@ -1,6 +1,7 @@
 import discord
 import os
 import yaml
+from pyfiglet import figlet_format
 from discord import app_commands
 from discord.ext import commands
 
@@ -24,9 +25,9 @@ class ASCII(commands.Cog):
 
     @app_commands.command(name="ascii", description="Get random advice")
     @app_commands.guilds(discord.Object(id=GUILD_ID))
-    async def ascii(self, interaction: discord.Interaction) -> None:
+    async def ascii(self, interaction: discord.Interaction, text: str) -> None:
 
-        pass
+        await interaction.response.send_message(f"```{figlet_format(text, font='starwars')}```")
 
 
 async def setup(bot: commands.Bot) -> None:

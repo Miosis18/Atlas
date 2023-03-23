@@ -1,6 +1,8 @@
 import discord
 import os
 import yaml
+import requests
+import datetime as dt
 from discord import app_commands
 from discord.ext import commands
 
@@ -26,7 +28,15 @@ class Cat(commands.Cog):
     @app_commands.guilds(discord.Object(id=GUILD_ID))
     async def cat(self, interaction: discord.Interaction) -> None:
 
-        pass
+        request = requests.get(url='http://edgecats.net/random').content.decode("UTF-8")
+
+        cat_embed = discord.Embed(color=int(CONFIG["EmbedColors"].replace("#", ""), 16),
+                                  timestamp=dt.datetime.now())
+        cat_embed.set_image(url=request)
+        cat_embed.set_footer(text=f"{CONFIG['BotName']} - Command issued by {interaction.user.name}#"
+                                  f"{interaction.user.discriminator}", icon_url=self.Bot.user.display_avatar)
+
+        await interaction.response.send_message(embed=cat_embed)
 
 
 async def setup(bot: commands.Bot) -> None:
