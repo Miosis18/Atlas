@@ -30,6 +30,7 @@ class Atlas(commands.Bot):
         await load_cogs(self, "./addons/tasks")
         # Load cogs from four different directories
         await load_cogs(self, "./cogs/commands/general")
+        await load_cogs(self, "./cogs/commands/miosis")
         await load_cogs(self, "./cogs/events")
         await load_cogs(self, "./cogs/tasks")
         await load_cogs(self, "./utilities/management/syncing")
