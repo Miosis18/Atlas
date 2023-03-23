@@ -1,0 +1,5 @@
+discord~=2.2.2
+colorama~=0.4.6
+PyYAML~=6.0
+pytz~=2022.7.1
+SQLAlchemy~=2.0.6

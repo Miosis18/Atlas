@@ -1,0 +1,41 @@
+# ===========================================================================
+# Garry Configuration
+# If you find any issues, need support, or have a suggestion for the bot, please join our support server and create a ticket,
+# https://discord.gg/tKqBfUkyds
+# Language can be changed in lang.yml
+# ===========================================================================
+
+# ===========================================================================
+# BOT INFORMATION
+# You must not leave them as blank!
+# ===========================================================================
+
+Version: "1.0.0" # The version of the bot
+BotToken: "x" # The bot token obtained from Discord Developer Portal
+LicenseKey: "ce400f5833179010198e" # The license key for the bot
+GuildID: "998357142568443914" # The ID of the guild where the bot operates
+OwnerID: "669987834966441995" # The ID of the owner of the bot
+BotName: "Atlas" # The name of the bot
+EmbedColors: "#3489a8" # The default color for embedded messages
+
+# ===========================================================================
+# BOT ACTIVITY
+# ===========================================================================
+
+BotActivitySettings:
+  Enabled: true # Whether to enable bot activity or not
+  Type: "WATCHING" # The type of activity, one of WATCHING, PLAYING, COMPETING, LISTENING
+  Interval: 30 # The interval in seconds between status changes
+  Statuses: # The list of statuses to cycle through
+    - "{total-users} users" # A status message that shows the total number of users in the guild
+    - "{total-messages} messages" # A status message that shows the total number of messages in the guild
+    - "test" # A test status message
+
+# ===========================================================================
+# USER JOIN/LEAVE MESSAGE CONFIGURATION
+# ===========================================================================
+
+EnableWelcomeMessages: true # Whether to enable welcome messages or not
+EnableLeaveMessages: true # Whether to enable leave messages or not
+WelcomeChannel: "1085951795760742471" # The ID of the channel where welcome messages will be sent
+LeaveChannel: "998357515446267904" # The ID of the channel where leave messages will be sent

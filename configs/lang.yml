@@ -1,0 +1,14 @@
+# ===========================================================================
+# Garry Configuration
+# If you find any issues, need support, or have a suggestion for the bot, please join our support server and create a ticket,
+# https://discord.gg/tKqBfUkyds
+# Language can be changed in lang.yml
+# ===========================================================================
+
+# ===========================================================================
+# 8BALL COMMAND MESSAGES
+# ===========================================================================
+EightBallQuestion: "Question"
+EightBallAnswer: "Answer"
+
+EightBallReplies: ["Never", "Absolutely", "Absolutely, You should also go buy some stocks", "Without a doubt", "Yes, definitely", "It is certain", "Not so sure", "You tell me", "Unclear, ask again", "Possible, but not probable", "Yes", "My reply is yes", "For sure", "Could be", "Negative", "Most likely", "As I see it, yes", "No", "My reply is no", "I see good things happening", "Absolutely not", "Better not tell you now", "Signs point to yes", "It is decidedly so"]
