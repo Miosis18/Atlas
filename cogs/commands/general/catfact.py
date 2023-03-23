@@ -1,6 +1,8 @@
 import discord
 import os
 import yaml
+import requests
+import datetime as dt
 from discord import app_commands
 from discord.ext import commands
 
@@ -26,6 +28,7 @@ class CatFact(commands.Cog):
     @app_commands.guilds(discord.Object(id=GUILD_ID))
     async def cat_fact(self, interaction: discord.Interaction) -> None:
 
+        # Will have to come back to this one, the API I was going to use is no longer a thing.
         pass
 
 
