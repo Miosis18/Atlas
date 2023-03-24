@@ -28,8 +28,16 @@ class CatFact(commands.Cog):
     @app_commands.guilds(discord.Object(id=GUILD_ID))
     async def cat_fact(self, interaction: discord.Interaction) -> None:
 
-        # Will have to come back to this one, the API I was going to use is no longer a thing.
-        pass
+        request = requests.get(url="https://meowfacts.herokuapp.com/").json()
+
+        cat_fact_embed = discord.Embed(title=f"**Facts about cats** :cat:",
+                                       description=request["data"][0],
+                                       color=int(CONFIG["EmbedColors"].replace("#", ""), 16),
+                                       timestamp=dt.datetime.now())
+        cat_fact_embed.set_footer(text=f"{CONFIG['BotName']} - Command issued by {interaction.user.name}#"
+                                       f"{interaction.user.discriminator}", icon_url=self.Bot.user.display_avatar)
+
+        await interaction.response.send_message(embed=cat_fact_embed)
 
 
 async def setup(bot: commands.Bot) -> None:
