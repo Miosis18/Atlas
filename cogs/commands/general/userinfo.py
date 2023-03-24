@@ -24,9 +24,12 @@ class UserInfo(commands.Cog):
 
     @app_commands.command(name="userinfo", description="Get random advice")
     @app_commands.guilds(discord.Object(id=GUILD_ID))
-    async def user_info(self, interaction: discord.Interaction) -> None:
+    async def user_info(self, interaction: discord.Interaction, user: discord.Member = None) -> None:
 
-        pass
+        target_user = interaction.user
+
+        if user:
+            target_user = user
 
 
 async def setup(bot: commands.Bot) -> None:

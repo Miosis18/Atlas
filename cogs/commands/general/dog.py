@@ -28,14 +28,14 @@ class Dog(commands.Cog):
     @app_commands.guilds(discord.Object(id=GUILD_ID))
     async def dog(self, interaction: discord.Interaction) -> None:
 
-        appropriate_image = False
+        valid_image = False
         image = "https://i.pinimg.com/564x/7e/c3/5a/7ec35aa21a3212ed7658f7ff9542c9db.jpg"
 
-        while appropriate_image is False:
+        while valid_image is False:
             request = requests.get(url="https://random.dog/woof.json").json()
             if request["url"][-3:] == "jpg":
                 image = request["url"]
-                appropriate_image = True
+                valid_image = True
 
         dog_embed = discord.Embed(title="**Woof Woof** :dog:",
                                   color=int(CONFIG["EmbedColors"].replace("#", ""), 16),

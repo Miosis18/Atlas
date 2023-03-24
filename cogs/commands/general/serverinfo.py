@@ -39,10 +39,10 @@ class ServerInfo(commands.Cog):
 
         statistics_message = (
             f">>> **Members:** {interaction.guild.member_count}\n"
-            f"**Roles:** {len(interaction.guild.roles) - 1 if len(interaction.guild.roles) - 1 >= 0 else 0}\n"
-            f"**Channels:** {len(interaction.guild.channels) - 1 if len(interaction.guild.channels) - 1 >= 0 else 0}\n"
-            f"**Emojis:** {len(interaction.guild.emojis) - 1 if len(interaction.guild.emojis) - 1 >= 0 else 0}\n"
-            f"**Stickers:** {len(interaction.guild.stickers) - 1 if len(interaction.guild.stickers) - 1 >= 0 else 0}\n"
+            f"**Roles:** {max(len(interaction.guild.roles) - 1, 0)}\n"
+            f"**Channels:** {max(len(interaction.guild.channels) - 1, 0)}\n"
+            f"**Emojis:** {max(len(interaction.guild.emojis) - 1, 0)}\n"
+            f"**Stickers:** {max(len(interaction.guild.stickers) - 1, 0)}\n"
             f"**Boosts:** {interaction.guild.premium_subscription_count}")
 
         server_statistics_embed = discord.Embed(color=int(CONFIG["EmbedColors"].replace("#", ""), 16),
