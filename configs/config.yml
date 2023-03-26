@@ -39,3 +39,11 @@ EnableWelcomeMessages: true # Whether to enable welcome messages or not
 EnableLeaveMessages: true # Whether to enable leave messages or not
 WelcomeChannel: "1085951795760742471" # The ID of the channel where welcome messages will be sent
 LeaveChannel: "998357515446267904" # The ID of the channel where leave messages will be sent
+
+# ===========================================================================
+# MEME COMMAND CONFIGURATION
+# ===========================================================================
+
+SubReddits:
+  - "dankmemes"
+  - "memes"

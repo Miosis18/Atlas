@@ -1,7 +1,8 @@
 import discord
 import os
 import yaml
-import asyncpraw
+import aiohttp
+import asyncio
 import random
 import datetime as dt
 from discord import app_commands
@@ -29,8 +30,23 @@ class Meme(commands.Cog):
     @app_commands.guilds(discord.Object(id=GUILD_ID))
     async def meme(self, interaction: discord.Interaction) -> None:
 
-        # Come back to this command at a later date.
-        pass
+        subreddits = CONFIG["SubReddits"]
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"https://www.reddit.com/r/{random.choice(subreddits)}/random/.json") as response:
+                data = await response.json()
+
+        chosen_post = data[0]['data']['children'][0]['data']
+
+        meme_embed = discord.Embed(title=chosen_post['title'],
+                                   description=f"[View Thread](https://reddit.com{chosen_post['permalink']})",
+                                   color=int(CONFIG["EmbedColors"].replace("#", ""), 16))
+        meme_embed.set_image(url=chosen_post['url'])
+        meme_embed.set_footer(text=f"\U0001F44D {chosen_post['ups']} \U0001F44E {chosen_post['downs']} "
+                                   f"\U0001F4AC {chosen_post['num_comments']}")
+
+        await interaction.response.send_message(embed=meme_embed)
+
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Meme(bot))
