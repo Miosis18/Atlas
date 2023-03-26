@@ -28,11 +28,12 @@ class Atlas(commands.Bot):
     async def setup_hook(self) -> None:
         await load_cogs(self, "./addons/commands")
         await load_cogs(self, "./addons/tasks")
-        # Load cogs from four different directories
+        # Loads commands and events from non addon directories
         await load_cogs(self, "./cogs/commands/general")
-        await load_cogs(self, "./cogs/commands/miosis")
+        await load_cogs(self, "./cogs/commands/utility")
         await load_cogs(self, "./cogs/events/general")
         await load_cogs(self, "./cogs/tasks")
+        # Load sync command (Not a slash command)
         await load_cogs(self, "./utilities/management/syncing")
 
 
