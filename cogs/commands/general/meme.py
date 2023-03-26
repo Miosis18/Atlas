@@ -2,9 +2,7 @@ import discord
 import os
 import yaml
 import aiohttp
-import asyncio
 import random
-import datetime as dt
 from discord import app_commands
 from discord.ext import commands
 

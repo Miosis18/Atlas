@@ -30,7 +30,8 @@ class Atlas(commands.Bot):
         await load_cogs(self, "./addons/tasks")
         # Loads commands and events from non addon directories
         await load_cogs(self, "./cogs/commands/general")
-        await load_cogs(self, "./cogs/commands/utility")
+        await load_cogs(self, "./cogs/commands/moderation")
+        await load_cogs(self, "./cogs/commands/branding")
         await load_cogs(self, "./cogs/events/general")
         await load_cogs(self, "./cogs/tasks")
         # Load sync command (Not a slash command)
