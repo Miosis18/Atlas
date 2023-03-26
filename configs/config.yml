@@ -44,6 +44,55 @@ LeaveChannel: "998357515446267904" # The ID of the channel where leave messages 
 # MEME COMMAND CONFIGURATION
 # ===========================================================================
 
+# Define the list of subreddits from which memes can be fetched
 SubReddits:
   - "dankmemes"
   - "memes"
+
+# ===========================================================================
+# SUGGESTION SYSTEM
+# ===========================================================================
+
+SuggestionSettings:
+  Enabled: true # Enable or disable the suggestion system
+  ChannelID: "998357529853706270" # The ID of the channel where suggestions will be posted
+  EnableAcceptDenySystem: true # Enable or disable the accept/deny system for suggestions
+  RemoveAllButtonsIfAcceptedOrDenied: true # Remove all buttons once a suggestion has been accepted or denied
+  LogsChannel: "1088253522878922842" # The ID of the channel where suggestion logs will be posted
+
+  # Define a list of roles that are allowed to use the suggestion system
+  AllowedRoles:
+    - "998357391617826828"
+
+# Define the different statuses that a suggestion can have
+SuggestionStatuses:
+  Pending: "🟠 Pending"
+  Accepted: "🟢 Accepted"
+  Denied: "🔴 Denied"
+
+# Define the colors that will be used for each status in the suggestion embed
+SuggestionStatusesEmbedColors:
+  Pending: "#E67E22"
+  Accepted: "#2ECC71"
+  Denied: "#E74C3C"
+
+# Define the different buttons that will be available for each suggestion
+SuggestionUpvote:
+  ButtonName: "Upvote"
+  ButtonColor: "GRAY"
+
+SuggestionDownvote:
+  ButtonName: "Downvote"
+  ButtonColor: "GRAY"
+
+SuggestionResetvote:
+  ButtonName: "Reset Vote"
+  ButtonColor: "GRAY"
+
+SuggestionAccept:
+  ButtonName: "Accept"
+  ButtonColor: "BLURPLE"
+
+SuggestionDeny:
+  ButtonName: "Deny"
+  ButtonColor: "BLURPLE"
