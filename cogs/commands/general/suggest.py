@@ -22,25 +22,54 @@ class SuggestionsButtons(ui.View):
 
     @discord.ui.button(label="Upvote", style=discord.ButtonStyle.secondary, emoji="\U00002b06")
     async def upvote(self, interaction: discord.Interaction, button: discord.ui.Button):
-        print(interaction.message.id)
+        suggestions_channel = await interaction.client.fetch_channel(CONFIG["SuggestionSettings"]["ChannelID"])
+        suggestion = session.query(Suggestions).filter(Suggestions.message_id == str(interaction.message.id)).first()
+
+        suggestion.up_votes += 1
+        session.commit()
+
+        suggestion_message = await suggestions_channel.fetch_message(int(suggestion.message_id))
+
+        try:
+            suggestion_author = await interaction.client.fetch_user(int(suggestion.author_id))
+        except discord.errors.NotFound:
+            suggestion_author = None
+
+        suggestion_author = suggestion_author.mention if suggestion_author is not None else "Unknown"
+
+        suggestion_embed = discord.Embed(description=f":bulb: **New Suggestion (#{suggestion.suggestion_id})**",
+                                         color=int(CONFIG["SuggestionStatusesEmbedColors"]["Pending"].replace(
+                                             "#", ""), 16),
+                                         timestamp=dt.datetime.utcnow())
+        suggestion_embed.set_thumbnail(url=interaction.user.display_avatar.url)
+        suggestion_embed.add_field(name="• Suggestion", value=f"> ```{suggestion.content}```", inline=False)
+        suggestion_embed.add_field(name="• Information", value=f">>> **From:** {suggestion_author}\n"
+                                                               f"**Upvotes:** {suggestion.up_votes}\n"
+                                                               f"**Downvotes:** {suggestion.down_votes}\n"
+                                                               f"**Status:** \U0001F7E0 Pending",
+                                   inline=False)
+        suggestion_embed.set_footer(icon_url=interaction.user.display_avatar.url,
+                                    text=f"{interaction.user.name}#{interaction.user.discriminator}")
+
+        await suggestion_message.edit(embed=suggestion_embed)
 
     @discord.ui.button(label="Downvote", style=discord.ButtonStyle.secondary, emoji="\U00002b07")
     async def down_vote(self, interaction: discord.Interaction, button: discord.ui.Button):
-        pass
+        suggestion = session.query(Suggestions).filter(Suggestions.message_id == str(interaction.message.id)).first()
 
     @discord.ui.button(label="Reset Vote", style=discord.ButtonStyle.secondary, emoji="\U0001f5d1")
     async def reset(self, interaction: discord.Interaction, button: discord.ui.Button):
-        pass
+        suggestion = session.query(Suggestions).filter(Suggestions.message_id == str(interaction.message.id)).first()
 
     @discord.ui.button(label="Accept", style=discord.ButtonStyle.primary, emoji="\U00002705",
                        disabled=not (CONFIG["SuggestionSettings"]["EnableAcceptDenySystem"]))
     async def accept(self, interaction: discord.Interaction, button: discord.ui.Button):
-        pass
+        suggestion = session.query(Suggestions).filter(Suggestions.message_id == str(interaction.message.id)).first()
 
     @discord.ui.button(label="Reject", style=discord.ButtonStyle.primary, emoji="\U0000274c",
                        disabled=not (CONFIG["SuggestionSettings"]["EnableAcceptDenySystem"]))
     async def reject(self, interaction: discord.Interaction, button: discord.ui.Button):
-        pass
+        suggestion = session.query(Suggestions).filter(Suggestions.message_id == str(interaction.message.id)).first()
 
 
 class Suggest(commands.Cog):
@@ -57,6 +86,7 @@ class Suggest(commands.Cog):
                 suggestion_message = await suggestions_channel.fetch_message(int(suggestion.message_id))
                 await suggestion_message.edit(view=SuggestionsButtons())
 
+            # If message is deleted, delete the suggestion from the DB
             except discord.errors.NotFound:
                 session.delete(suggestion)
                 session.commit()
