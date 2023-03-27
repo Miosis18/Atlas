@@ -64,12 +64,6 @@ SuggestionSettings:
   AllowedRoles:
     - "998357391617826828"
 
-# Define the different statuses that a suggestion can have
-SuggestionStatuses:
-  Pending: "🟠 Pending"
-  Accepted: "🟢 Accepted"
-  Denied: "🔴 Denied"
-
 # Define the colors that will be used for each status in the suggestion embed
 SuggestionStatusesEmbedColors:
   Pending: "#E67E22"

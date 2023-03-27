@@ -66,10 +66,17 @@ class Suggest(commands.Cog):
             last_suggestion = session.query(Suggestions).order_by(Suggestions.suggestion_id.desc()).first()
             last_suggestion_id = 0 if last_suggestion is None else last_suggestion.suggestion_id
 
-            suggestion_embed = discord.Embed(title=f":bulb: New Suggestion (#{last_suggestion_id + 1})",
+            suggestion_embed = discord.Embed(description=f":bulb: **New Suggestion (#{last_suggestion_id + 1})**",
                                              color=int(CONFIG["SuggestionStatusesEmbedColors"]["Pending"].replace(
                                                  "#", ""), 16),
                                              timestamp=dt.datetime.utcnow())
+            suggestion_embed.set_thumbnail(url=interaction.user.display_avatar.url)
+            suggestion_embed.add_field(name="• Suggestion", value=f"> ```{suggestion}```", inline=False)
+            suggestion_embed.add_field(name="• Information", value=f">>> **From:** {interaction.user.mention}\n"
+                                                                   f"**Upvotes:** {0}\n"
+                                                                   f"**Downvotes:** {0}\n"
+                                                                   f"**Status:** \U0001F7E0 Pending",
+                                       inline=False)
             suggestion_embed.set_footer(icon_url=interaction.user.display_avatar.url,
                                         text=f"{interaction.user.name}#{interaction.user.discriminator}")
 
