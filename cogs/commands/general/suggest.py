@@ -22,7 +22,7 @@ class SuggestionsButtons(ui.View):
 
     @discord.ui.button(label="Upvote", style=discord.ButtonStyle.secondary, emoji="\U00002b06")
     async def upvote(self, interaction: discord.Interaction, button: discord.ui.Button):
-        pass
+        print(interaction.message.id)
 
     @discord.ui.button(label="Downvote", style=discord.ButtonStyle.secondary, emoji="\U00002b07")
     async def down_vote(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -46,6 +46,20 @@ class SuggestionsButtons(ui.View):
 class Suggest(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.Bot = bot
+
+    # Re-add working views to pending suggestions
+    async def cog_load(self):
+        suggestions_channel = await self.Bot.fetch_channel(CONFIG["SuggestionSettings"]["ChannelID"])
+        pending_suggestions = session.query(Suggestions).filter(Suggestions.status == "Pending").all()
+
+        for suggestion in pending_suggestions:
+            try:
+                suggestion_message = await suggestions_channel.fetch_message(int(suggestion.message_id))
+                await suggestion_message.edit(view=SuggestionsButtons())
+
+            except discord.errors.NotFound:
+                session.delete(suggestion)
+                session.commit()
 
     # Cog Ready Terminal Message
 
