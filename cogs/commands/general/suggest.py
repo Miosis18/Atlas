@@ -20,30 +20,30 @@ class SuggestionsButtons(ui.View):
     def __init__(self):
         super().__init__(timeout=None)
 
-    @discord.ui.button(label="Upvote", style=discord.ButtonStyle.secondary, emoji="\U00002b06")
-    async def upvote(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @staticmethod
+    async def _vote(interaction, vote_type):
         suggestions_channel = await interaction.client.fetch_channel(CONFIG["SuggestionSettings"]["ChannelID"])
         suggestion = session.query(Suggestions).filter(Suggestions.message_id == str(interaction.message.id)).first()
 
-        suggestion.up_votes += 1
+        if vote_type == "up_vote":
+            suggestion.up_votes += 1
+        elif vote_type == "down_vote":
+            suggestion.down_votes += 1
+
         session.commit()
 
         suggestion_message = await suggestions_channel.fetch_message(int(suggestion.message_id))
 
-        try:
-            suggestion_author = await interaction.client.fetch_user(int(suggestion.author_id))
-        except discord.errors.NotFound:
-            suggestion_author = None
-
-        suggestion_author = suggestion_author.mention if suggestion_author is not None else "Unknown"
+        suggestion_author = await interaction.client.fetch_user(int(suggestion.author_id))
+        author_mention = suggestion_author.mention if suggestion_author else "Unknown"
 
         suggestion_embed = discord.Embed(description=f":bulb: **New Suggestion (#{suggestion.suggestion_id})**",
-                                         color=int(CONFIG["SuggestionStatusesEmbedColors"]["Pending"].replace(
-                                             "#", ""), 16),
+                                         color=int(CONFIG["SuggestionStatusesEmbedColors"]["Pending"].replace("#", ""),
+                                                   16),
                                          timestamp=dt.datetime.utcnow())
         suggestion_embed.set_thumbnail(url=interaction.user.display_avatar.url)
         suggestion_embed.add_field(name="• Suggestion", value=f"> ```{suggestion.content}```", inline=False)
-        suggestion_embed.add_field(name="• Information", value=f">>> **From:** {suggestion_author}\n"
+        suggestion_embed.add_field(name="• Information", value=f">>> **From:** {author_mention}\n"
                                                                f"**Upvotes:** {suggestion.up_votes}\n"
                                                                f"**Downvotes:** {suggestion.down_votes}\n"
                                                                f"**Status:** \U0001F7E0 Pending",
@@ -53,9 +53,13 @@ class SuggestionsButtons(ui.View):
 
         await suggestion_message.edit(embed=suggestion_embed)
 
+    @discord.ui.button(label="Upvote", style=discord.ButtonStyle.secondary, emoji="\U00002b06")
+    async def upvote(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self._vote(interaction, "up_vote")
+
     @discord.ui.button(label="Downvote", style=discord.ButtonStyle.secondary, emoji="\U00002b07")
     async def down_vote(self, interaction: discord.Interaction, button: discord.ui.Button):
-        suggestion = session.query(Suggestions).filter(Suggestions.message_id == str(interaction.message.id)).first()
+        await self._vote(interaction, "down_vote")
 
     @discord.ui.button(label="Reset Vote", style=discord.ButtonStyle.secondary, emoji="\U0001f5d1")
     async def reset(self, interaction: discord.Interaction, button: discord.ui.Button):

@@ -28,6 +28,21 @@ class Suggestions(Base):
     down_votes = Column(Integer, nullable=False)
     status = Column(String(25), nullable=False)
 
+    unique_votes = relationship("SuggestionVotes", backref="unique_votes")
+
     def get_id(self):
         return self.suggestion_id
 
+
+class SuggestionVotes(Base):
+    __tablename__ = "suggestion_votes"
+    __table_args__ = (UniqueConstraint('suggestion_id', 'voter_id', name='one_vote_per_voter'),)
+
+    suggestion_vote_id = Column(Integer, primary_key=True)
+    suggestion_id = Column(String(100), ForeignKey('suggestions.suggestion_id'), nullable=False)
+    voter_id = Column(String(100), nullable=False)
+    up_vote = Column(Boolean, nullable=False)
+    down_vote = Column(Boolean, nullable=False)
+
+    def get_id(self):
+        return self.suggestion_vote_id
