@@ -5,7 +5,7 @@ import datetime as dt
 from discord import app_commands, ui
 from discord.ext import commands
 from utilities.management.database.database_management import get_session
-from utilities.models.database_models import Suggestions
+from utilities.models.database_models import Suggestions, SuggestionVotes
 
 with open("./configs/config.yml") as config:
     CONFIG = yaml.load(config, Loader=yaml.FullLoader)
@@ -24,34 +24,85 @@ class SuggestionsButtons(ui.View):
     async def _vote(interaction, vote_type):
         suggestions_channel = await interaction.client.fetch_channel(CONFIG["SuggestionSettings"]["ChannelID"])
         suggestion = session.query(Suggestions).filter(Suggestions.message_id == str(interaction.message.id)).first()
+        unique_vote = session.query(SuggestionVotes).filter((SuggestionVotes.suggestion_id == suggestion.suggestion_id)
+                                                            and
+                                                            (SuggestionVotes.voter_id == interaction.user.id)).first()
 
-        if vote_type == "up_vote":
-            suggestion.up_votes += 1
-        elif vote_type == "down_vote":
-            suggestion.down_votes += 1
+        if (unique_vote is None) or (vote_type == "up_vote" and unique_vote.down_vote == 1) or \
+                (vote_type == "down_vote" and unique_vote.up_vote == 1):
+            if unique_vote is None:
+                if vote_type == "up_vote":
+                    suggestion.up_votes += 1
 
-        session.commit()
+                    new_suggestion_vote = SuggestionVotes(
+                        suggestion_id=suggestion.suggestion_id,
+                        voter_id=interaction.user.id,
+                        up_vote=True,
+                        down_vote=False
+                    )
 
-        suggestion_message = await suggestions_channel.fetch_message(int(suggestion.message_id))
+                    session.add(new_suggestion_vote)
 
-        suggestion_author = await interaction.client.fetch_user(int(suggestion.author_id))
-        author_mention = suggestion_author.mention if suggestion_author else "Unknown"
+                    await interaction.response.send_message("You have up-voted this suggestion", ephemeral=True)
 
-        suggestion_embed = discord.Embed(description=f":bulb: **New Suggestion (#{suggestion.suggestion_id})**",
-                                         color=int(CONFIG["SuggestionStatusesEmbedColors"]["Pending"].replace("#", ""),
-                                                   16),
-                                         timestamp=dt.datetime.utcnow())
-        suggestion_embed.set_thumbnail(url=interaction.user.display_avatar.url)
-        suggestion_embed.add_field(name="• Suggestion", value=f"> ```{suggestion.content}```", inline=False)
-        suggestion_embed.add_field(name="• Information", value=f">>> **From:** {author_mention}\n"
-                                                               f"**Upvotes:** {suggestion.up_votes}\n"
-                                                               f"**Downvotes:** {suggestion.down_votes}\n"
-                                                               f"**Status:** \U0001F7E0 Pending",
-                                   inline=False)
-        suggestion_embed.set_footer(icon_url=interaction.user.display_avatar.url,
-                                    text=f"{interaction.user.name}#{interaction.user.discriminator}")
+                elif vote_type == "down_vote":
+                    suggestion.down_votes += 1
 
-        await suggestion_message.edit(embed=suggestion_embed)
+                    new_suggestion_vote = SuggestionVotes(
+                        suggestion_id=suggestion.suggestion_id,
+                        voter_id=interaction.user.id,
+                        up_vote=False,
+                        down_vote=True
+                    )
+
+                    session.add(new_suggestion_vote)
+
+                    await interaction.response.send_message("You have down-voted this suggestion", ephemeral=True)
+
+            elif (unique_vote is not None) and (vote_type == "up_vote" and unique_vote.down_vote == 1):
+                unique_vote.down_vote -= 1
+                suggestion.down_votes -= 1
+                unique_vote.up_vote += 1
+                suggestion.up_votes += 1
+
+                await interaction.response.send_message("You have changed your vote to an up vote", ephemeral=True)
+
+            elif (unique_vote is not None) and (vote_type == "down_vote" and unique_vote.up_vote == 1):
+                unique_vote.down_vote += 1
+                suggestion.down_votes += 1
+                unique_vote.up_vote -= 1
+                suggestion.up_votes -= 1
+
+                await interaction.response.send_message("You have changed your vote to a down vote", ephemeral=True)
+
+            session.commit()
+
+            suggestion = session.query(Suggestions).filter(
+                Suggestions.message_id == str(interaction.message.id)).first()
+
+            suggestion_message = await suggestions_channel.fetch_message(int(suggestion.message_id))
+
+            suggestion_author = await interaction.client.fetch_user(int(suggestion.author_id))
+            author_mention = suggestion_author.mention if suggestion_author else "Unknown"
+
+            suggestion_embed = discord.Embed(description=f":bulb: **New Suggestion (#{suggestion.suggestion_id})**",
+                                             color=int(CONFIG["SuggestionStatusesEmbedColors"]["Pending"].replace("#", ""),
+                                                       16),
+                                             timestamp=dt.datetime.utcnow())
+            suggestion_embed.set_thumbnail(url=interaction.user.display_avatar.url)
+            suggestion_embed.add_field(name="• Suggestion", value=f"> ```{suggestion.content}```", inline=False)
+            suggestion_embed.add_field(name="• Information", value=f">>> **From:** {author_mention}\n"
+                                                                   f"**Upvotes:** {suggestion.up_votes}\n"
+                                                                   f"**Downvotes:** {suggestion.down_votes}\n"
+                                                                   f"**Status:** \U0001F7E0 Pending",
+                                       inline=False)
+            suggestion_embed.set_footer(icon_url=interaction.user.display_avatar.url,
+                                        text=f"{interaction.user.name}#{interaction.user.discriminator}")
+
+            await suggestion_message.edit(embed=suggestion_embed)
+
+        else:
+            await interaction.response.send_message("You have already voted", ephemeral=True)
 
     @discord.ui.button(label="Upvote", style=discord.ButtonStyle.secondary, emoji="\U00002b06")
     async def upvote(self, interaction: discord.Interaction, button: discord.ui.Button):
