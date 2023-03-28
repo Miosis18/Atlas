@@ -29,7 +29,7 @@ class SuggestionsButtons(ui.View):
                                                             (SuggestionVotes.voter_id == interaction.user.id)).first()
 
         if (unique_vote is None) or (vote_type == "up_vote" and unique_vote.down_vote == 1) or \
-                (vote_type == "down_vote" and unique_vote.up_vote == 1):
+                (vote_type == "down_vote" and unique_vote.up_vote == 1) or (vote_type == "reset"):
             if unique_vote is None:
                 if vote_type == "up_vote":
                     suggestion.up_votes += 1
@@ -59,6 +59,10 @@ class SuggestionsButtons(ui.View):
 
                     await interaction.response.send_message("You have down-voted this suggestion", ephemeral=True)
 
+                elif vote_type == "reset":
+                    await interaction.response.send_message("You have not cast a vote yet, there is nothing to reset",
+                                                            ephemeral=True)
+
             elif (unique_vote is not None) and (vote_type == "up_vote" and unique_vote.down_vote == 1):
                 unique_vote.down_vote -= 1
                 suggestion.down_votes -= 1
@@ -74,6 +78,16 @@ class SuggestionsButtons(ui.View):
                 suggestion.up_votes -= 1
 
                 await interaction.response.send_message("You have changed your vote to a down vote", ephemeral=True)
+
+            elif (unique_vote is not None) and (vote_type == "reset"):
+                if unique_vote.up_vote == 1:
+                    suggestion.up_votes -= 1
+                elif unique_vote.down_vote == 1:
+                    suggestion.down_votes -= 1
+
+                session.delete(unique_vote)
+
+                await interaction.response.send_message("Your vote has been reset, please cast another", ephemeral=True)
 
             session.commit()
 
@@ -114,7 +128,7 @@ class SuggestionsButtons(ui.View):
 
     @discord.ui.button(label="Reset Vote", style=discord.ButtonStyle.secondary, emoji="\U0001f5d1")
     async def reset(self, interaction: discord.Interaction, button: discord.ui.Button):
-        suggestion = session.query(Suggestions).filter(Suggestions.message_id == str(interaction.message.id)).first()
+        await self._vote(interaction, "reset")
 
     @discord.ui.button(label="Accept", style=discord.ButtonStyle.primary, emoji="\U00002705",
                        disabled=not (CONFIG["SuggestionSettings"]["EnableAcceptDenySystem"]))
