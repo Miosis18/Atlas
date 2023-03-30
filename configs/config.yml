@@ -58,7 +58,7 @@ SuggestionSettings:
   ChannelID: "998357529853706270" # The ID of the channel where suggestions will be posted
   EnableAcceptDenySystem: true # Enable or disable the accept/deny system for suggestions
   RemoveAllButtonsIfAcceptedOrDenied: true # Remove all buttons once a suggestion has been accepted or denied
-  LogsChannel: "1088253522878922842" # The ID of the channel where suggestion logs will be posted
+  LogsChannelID: "1088253522878922842" # The ID of the channel where suggestion logs will be posted
 
   # Define a list of roles that are allowed to use the suggestion system
   AllowedRoles:

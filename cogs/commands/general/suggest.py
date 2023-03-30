@@ -16,6 +16,9 @@ GUILD_ID = int(CONFIG["GuildID"])
 session = get_session()
 
 
+# NOTE TO SELF: Need to finish accept and reject.
+# Add suggestions logs
+# Condense code, too long for my liking
 class SuggestionsButtons(ui.View):
     def __init__(self):
         super().__init__(timeout=None)
@@ -23,6 +26,7 @@ class SuggestionsButtons(ui.View):
     @staticmethod
     async def _vote(interaction, vote_type):
         suggestions_channel = await interaction.client.fetch_channel(CONFIG["SuggestionSettings"]["ChannelID"])
+        suggestion_logs_channel = await interaction.client.fetch_channel(CONFIG["SuggestionSettings"]["LogsChannelID"])
         suggestion = session.query(Suggestions).filter(Suggestions.message_id == str(interaction.message.id)).first()
         unique_vote = session.query(SuggestionVotes).filter((SuggestionVotes.suggestion_id == suggestion.suggestion_id)
                                                             and
@@ -44,6 +48,11 @@ class SuggestionsButtons(ui.View):
                     session.add(new_suggestion_vote)
 
                     await interaction.response.send_message("You have up-voted this suggestion", ephemeral=True)
+                    await suggestion_logs_channel.send(f"{interaction.user.mention} has up-voted [this]("
+                                                       f"https://discord.com/channels/"
+                                                       f"{CONFIG['GuildID']}/"
+                                                       f"{CONFIG['SuggestionSettings']['ChannelID']}/"
+                                                       f"{suggestion.message_id}) suggestion.")
 
                 elif vote_type == "down_vote":
                     suggestion.down_votes += 1
@@ -70,6 +79,11 @@ class SuggestionsButtons(ui.View):
                 suggestion.up_votes += 1
 
                 await interaction.response.send_message("You have changed your vote to an up vote", ephemeral=True)
+                await suggestion_logs_channel.send(f"{interaction.user.mention} has up-voted [this]("
+                                                   f"https://discord.com/channels/"
+                                                   f"{CONFIG['GuildID']}/"
+                                                   f"{CONFIG['SuggestionSettings']['ChannelID']}/"
+                                                   f"{suggestion.message_id}) suggestion.")
 
             elif (unique_vote is not None) and (vote_type == "down_vote" and unique_vote.up_vote == 1):
                 unique_vote.down_vote += 1
@@ -100,8 +114,8 @@ class SuggestionsButtons(ui.View):
             author_mention = suggestion_author.mention if suggestion_author else "Unknown"
 
             suggestion_embed = discord.Embed(description=f":bulb: **New Suggestion (#{suggestion.suggestion_id})**",
-                                             color=int(CONFIG["SuggestionStatusesEmbedColors"]["Pending"].replace("#", ""),
-                                                       16),
+                                             color=int(CONFIG["SuggestionStatusesEmbedColors"]["Pending"].replace(
+                                                 "#", ""), 16),
                                              timestamp=dt.datetime.utcnow())
             suggestion_embed.set_thumbnail(url=interaction.user.display_avatar.url)
             suggestion_embed.add_field(name="• Suggestion", value=f"> ```{suggestion.content}```", inline=False)
@@ -157,7 +171,7 @@ class Suggest(commands.Cog):
 
             # If message is deleted, delete the suggestion from the DB
             except discord.errors.NotFound:
-                session.delete(suggestion)
+                suggestion.status = "Rejected"
                 session.commit()
 
     # Cog Ready Terminal Message
