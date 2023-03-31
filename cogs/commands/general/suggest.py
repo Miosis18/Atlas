@@ -16,9 +16,8 @@ GUILD_ID = int(CONFIG["GuildID"])
 session = get_session()
 
 
-# NOTE TO SELF: Need to finish accept and reject.
-# Add suggestions logs
-# Condense code, too long for my liking
+# NOTE TO SELF: Need to finish accept and reject. #2
+# Condense code, too long for my liking #3
 class SuggestionsButtons(ui.View):
     def __init__(self):
         super().__init__(timeout=None)
@@ -67,6 +66,11 @@ class SuggestionsButtons(ui.View):
                     session.add(new_suggestion_vote)
 
                     await interaction.response.send_message("You have down-voted this suggestion", ephemeral=True)
+                    await suggestion_logs_channel.send(f"{interaction.user.mention} has down voted [this]("
+                                                       f"https://discord.com/channels/"
+                                                       f"{CONFIG['GuildID']}/"
+                                                       f"{CONFIG['SuggestionSettings']['ChannelID']}/"
+                                                       f"{suggestion.message_id}) suggestion.")
 
                 elif vote_type == "reset":
                     await interaction.response.send_message("You have not cast a vote yet, there is nothing to reset",
@@ -92,6 +96,11 @@ class SuggestionsButtons(ui.View):
                 suggestion.up_votes -= 1
 
                 await interaction.response.send_message("You have changed your vote to a down vote", ephemeral=True)
+                await suggestion_logs_channel.send(f"{interaction.user.mention} has down voted [this]("
+                                                   f"https://discord.com/channels/"
+                                                   f"{CONFIG['GuildID']}/"
+                                                   f"{CONFIG['SuggestionSettings']['ChannelID']}/"
+                                                   f"{suggestion.message_id}) suggestion.")
 
             elif (unique_vote is not None) and (vote_type == "reset"):
                 if unique_vote.up_vote == 1:
@@ -102,6 +111,11 @@ class SuggestionsButtons(ui.View):
                 session.delete(unique_vote)
 
                 await interaction.response.send_message("Your vote has been reset, please cast another", ephemeral=True)
+                await suggestion_logs_channel.send(f"{interaction.user.mention} has reset their vote on [this]("
+                                                   f"https://discord.com/channels/"
+                                                   f"{CONFIG['GuildID']}/"
+                                                   f"{CONFIG['SuggestionSettings']['ChannelID']}/"
+                                                   f"{suggestion.message_id}) suggestion.")
 
             session.commit()
 
@@ -130,7 +144,8 @@ class SuggestionsButtons(ui.View):
             await suggestion_message.edit(embed=suggestion_embed)
 
         else:
-            await interaction.response.send_message("You have already voted", ephemeral=True)
+            await interaction.response.send_message(f"You have already {'up' if vote_type == 'up_vote' else 'down'} "
+                                                    f"voted this suggestion.", ephemeral=True)
 
     @discord.ui.button(label="Upvote", style=discord.ButtonStyle.secondary, emoji="\U00002b06")
     async def upvote(self, interaction: discord.Interaction, button: discord.ui.Button):
