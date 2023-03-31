@@ -16,7 +16,6 @@ GUILD_ID = int(CONFIG["GuildID"])
 session = get_session()
 
 
-# NOTE TO SELF: Need to finish accept and reject. #2
 # Condense code, too long for my liking #3
 class SuggestionsButtons(ui.View):
     def __init__(self):
@@ -207,8 +206,42 @@ class SuggestionsButtons(ui.View):
                        disabled=not (CONFIG["SuggestionSettings"]["EnableAcceptDenySystem"]))
     async def reject(self, interaction: discord.Interaction, button: discord.ui.Button):
         if any(str(role.id) in self.acceptable_roles for role in interaction.user.roles):
+            suggestion_logs_channel = await interaction.client.fetch_channel(
+                CONFIG["SuggestionSettings"]["LogsChannelID"])
             suggestion = session.query(Suggestions).filter(Suggestions.message_id ==
                                                            str(interaction.message.id)).first()
+
+            suggestion.status = "Rejected"
+            session.commit()
+
+            suggestion_author = await interaction.client.fetch_user(int(suggestion.author_id))
+            author_mention = suggestion_author.mention if suggestion_author else "Unknown"
+
+            suggestion_embed = discord.Embed(description=f":bulb: **Suggestion (#{suggestion.suggestion_id}) Rejected**",
+                                             color=int(CONFIG["SuggestionStatusesEmbedColors"]["Rejected"].replace(
+                                                 "#", ""), 16),
+                                             timestamp=dt.datetime.utcnow())
+            suggestion_embed.set_thumbnail(url=interaction.user.display_avatar.url)
+            suggestion_embed.add_field(name="• Suggestion", value=f"> ```{suggestion.content}```", inline=False)
+            suggestion_embed.add_field(name="• Information", value=f">>> **From:** {author_mention}\n"
+                                                                   f"**Upvotes:** {suggestion.up_votes}\n"
+                                                                   f"**Downvotes:** {suggestion.down_votes}\n"
+                                                                   f"**Status:** \U0001F7E2 Rejected",
+                                       inline=False)
+            suggestion_embed.set_footer(icon_url=interaction.user.display_avatar.url,
+                                        text=f"{interaction.user.name}#{interaction.user.discriminator}")
+
+            await interaction.response.send_message("You successfully rejected [this]("
+                                                    f"https://discord.com/channels/"
+                                                    f"{CONFIG['GuildID']}/"
+                                                    f"{CONFIG['SuggestionSettings']['ChannelID']}/"
+                                                    f"{suggestion.message_id}) suggestion.")
+            await suggestion_logs_channel.send(f"{interaction.user.mention} has rejected [this]("
+                                               f"https://discord.com/channels/"
+                                               f"{CONFIG['GuildID']}/"
+                                               f"{CONFIG['SuggestionSettings']['ChannelID']}/"
+                                               f"{suggestion.message_id}) suggestion.")
+            await interaction.message.edit(embed=suggestion_embed, view=None)
         else:
             await interaction.response.send_message("You are not allowed to accept or deny suggestions.")
 
