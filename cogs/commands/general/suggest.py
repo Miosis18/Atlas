@@ -21,6 +21,7 @@ session = get_session()
 class SuggestionsButtons(ui.View):
     def __init__(self):
         super().__init__(timeout=None)
+        self.acceptable_roles = CONFIG["SuggestionSettings"]["AllowedRoles"]
 
     @staticmethod
     async def _vote(interaction, vote_type):
@@ -162,12 +163,54 @@ class SuggestionsButtons(ui.View):
     @discord.ui.button(label="Accept", style=discord.ButtonStyle.primary, emoji="\U00002705",
                        disabled=not (CONFIG["SuggestionSettings"]["EnableAcceptDenySystem"]))
     async def accept(self, interaction: discord.Interaction, button: discord.ui.Button):
-        suggestion = session.query(Suggestions).filter(Suggestions.message_id == str(interaction.message.id)).first()
+        if any(str(role.id) in self.acceptable_roles for role in interaction.user.roles):
+            suggestion_logs_channel = await interaction.client.fetch_channel(
+                CONFIG["SuggestionSettings"]["LogsChannelID"])
+            suggestion = session.query(Suggestions).filter(Suggestions.message_id ==
+                                                           str(interaction.message.id)).first()
+
+            suggestion.status = "Accepted"
+            session.commit()
+
+            suggestion_author = await interaction.client.fetch_user(int(suggestion.author_id))
+            author_mention = suggestion_author.mention if suggestion_author else "Unknown"
+
+            suggestion_embed = discord.Embed(description=f":bulb: **Suggestion (#{suggestion.suggestion_id}) Accepted**",
+                                             color=int(CONFIG["SuggestionStatusesEmbedColors"]["Accepted"].replace(
+                                                 "#", ""), 16),
+                                             timestamp=dt.datetime.utcnow())
+            suggestion_embed.set_thumbnail(url=interaction.user.display_avatar.url)
+            suggestion_embed.add_field(name="• Suggestion", value=f"> ```{suggestion.content}```", inline=False)
+            suggestion_embed.add_field(name="• Information", value=f">>> **From:** {author_mention}\n"
+                                                                   f"**Upvotes:** {suggestion.up_votes}\n"
+                                                                   f"**Downvotes:** {suggestion.down_votes}\n"
+                                                                   f"**Status:** \U0001F7E2 Accepted",
+                                       inline=False)
+            suggestion_embed.set_footer(icon_url=interaction.user.display_avatar.url,
+                                        text=f"{interaction.user.name}#{interaction.user.discriminator}")
+
+            await interaction.response.send_message("You successfully accepted [this]("
+                                                    f"https://discord.com/channels/"
+                                                    f"{CONFIG['GuildID']}/"
+                                                    f"{CONFIG['SuggestionSettings']['ChannelID']}/"
+                                                    f"{suggestion.message_id}) suggestion.")
+            await suggestion_logs_channel.send(f"{interaction.user.mention} has accepted [this]("
+                                               f"https://discord.com/channels/"
+                                               f"{CONFIG['GuildID']}/"
+                                               f"{CONFIG['SuggestionSettings']['ChannelID']}/"
+                                               f"{suggestion.message_id}) suggestion.")
+            await interaction.message.edit(embed=suggestion_embed, view=None)
+        else:
+            await interaction.response.send_message("You are not allowed to accept or deny suggestions.")
 
     @discord.ui.button(label="Reject", style=discord.ButtonStyle.primary, emoji="\U0000274c",
                        disabled=not (CONFIG["SuggestionSettings"]["EnableAcceptDenySystem"]))
     async def reject(self, interaction: discord.Interaction, button: discord.ui.Button):
-        suggestion = session.query(Suggestions).filter(Suggestions.message_id == str(interaction.message.id)).first()
+        if any(str(role.id) in self.acceptable_roles for role in interaction.user.roles):
+            suggestion = session.query(Suggestions).filter(Suggestions.message_id ==
+                                                           str(interaction.message.id)).first()
+        else:
+            await interaction.response.send_message("You are not allowed to accept or deny suggestions.")
 
 
 class Suggest(commands.Cog):
