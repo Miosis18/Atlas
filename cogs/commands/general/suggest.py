@@ -24,106 +24,70 @@ class SuggestionsButtons(ui.View):
 
     @staticmethod
     async def _vote(interaction, vote_type):
+        async def send_vote_msg(msg, mention):
+            await interaction.response.send_message(msg, ephemeral=True)
+            await suggestion_logs_channel.send(
+                f"{interaction.user.mention} {mention} [this](https://discord.com/channels/{CONFIG['GuildID']}/"
+                f"{CONFIG['SuggestionSettings']['ChannelID']}/{suggestion.message_id}) suggestion.")
+
         suggestions_channel = await interaction.client.fetch_channel(CONFIG["SuggestionSettings"]["ChannelID"])
         suggestion_logs_channel = await interaction.client.fetch_channel(CONFIG["SuggestionSettings"]["LogsChannelID"])
         suggestion = session.query(Suggestions).filter(Suggestions.message_id == str(interaction.message.id)).first()
-        unique_vote = session.query(SuggestionVotes).filter((SuggestionVotes.suggestion_id == suggestion.suggestion_id)
-                                                            and
-                                                            (SuggestionVotes.voter_id == interaction.user.id)).first()
+        unique_vote = session.query(SuggestionVotes).filter(
+            (SuggestionVotes.suggestion_id == suggestion.suggestion_id) and (
+                        SuggestionVotes.voter_id == interaction.user.id)).first()
 
-        if (unique_vote is None) or (vote_type == "up_vote" and unique_vote.down_vote == 1) or \
-                (vote_type == "down_vote" and unique_vote.up_vote == 1) or (vote_type == "reset"):
+        vote_messages = {
+            "up_vote": ("You have up-voted this suggestion", "has up-voted"),
+            "down_vote": ("You have down-voted this suggestion", "has down-voted"),
+            "reset": ("Your vote has been reset, please cast another", "has reset their vote on"),
+        }
+
+        valid_vote_change = {
+            "up_vote": (unique_vote is None or unique_vote.down_vote == 1),
+            "down_vote": (unique_vote is None or unique_vote.up_vote == 1),
+            "reset": (unique_vote is not None),
+        }
+
+        if valid_vote_change[vote_type]:
             if unique_vote is None:
-                if vote_type == "up_vote":
-                    suggestion.up_votes += 1
+                new_vote = SuggestionVotes(
+                    suggestion_id=suggestion.suggestion_id,
+                    voter_id=interaction.user.id,
+                    up_vote=(vote_type == "up_vote"),
+                    down_vote=(vote_type == "down_vote"),
+                )
+                session.add(new_vote)
+            else:
+                if vote_type == "reset":
+                    session.delete(unique_vote)
+                else:
+                    # Remove previous vote type
+                    if unique_vote.up_vote:
+                        suggestion.up_votes -= 1
+                    elif unique_vote.down_vote:
+                        suggestion.down_votes -= 1
 
-                    new_suggestion_vote = SuggestionVotes(
-                        suggestion_id=suggestion.suggestion_id,
-                        voter_id=interaction.user.id,
-                        up_vote=True,
-                        down_vote=False
-                    )
+                    unique_vote.up_vote = (vote_type == "up_vote")
+                    unique_vote.down_vote = (vote_type == "down_vote")
 
-                    session.add(new_suggestion_vote)
-
-                    await interaction.response.send_message("You have up-voted this suggestion", ephemeral=True)
-                    await suggestion_logs_channel.send(f"{interaction.user.mention} has up-voted [this]("
-                                                       f"https://discord.com/channels/"
-                                                       f"{CONFIG['GuildID']}/"
-                                                       f"{CONFIG['SuggestionSettings']['ChannelID']}/"
-                                                       f"{suggestion.message_id}) suggestion.")
-
-                elif vote_type == "down_vote":
-                    suggestion.down_votes += 1
-
-                    new_suggestion_vote = SuggestionVotes(
-                        suggestion_id=suggestion.suggestion_id,
-                        voter_id=interaction.user.id,
-                        up_vote=False,
-                        down_vote=True
-                    )
-
-                    session.add(new_suggestion_vote)
-
-                    await interaction.response.send_message("You have down-voted this suggestion", ephemeral=True)
-                    await suggestion_logs_channel.send(f"{interaction.user.mention} has down voted [this]("
-                                                       f"https://discord.com/channels/"
-                                                       f"{CONFIG['GuildID']}/"
-                                                       f"{CONFIG['SuggestionSettings']['ChannelID']}/"
-                                                       f"{suggestion.message_id}) suggestion.")
-
-                elif vote_type == "reset":
-                    await interaction.response.send_message("You have not cast a vote yet, there is nothing to reset",
-                                                            ephemeral=True)
-
-            elif (unique_vote is not None) and (vote_type == "up_vote" and unique_vote.down_vote == 1):
-                unique_vote.down_vote -= 1
-                suggestion.down_votes -= 1
-                unique_vote.up_vote += 1
+            if vote_type == "up_vote":
                 suggestion.up_votes += 1
-
-                await interaction.response.send_message("You have changed your vote to an up vote", ephemeral=True)
-                await suggestion_logs_channel.send(f"{interaction.user.mention} has up-voted [this]("
-                                                   f"https://discord.com/channels/"
-                                                   f"{CONFIG['GuildID']}/"
-                                                   f"{CONFIG['SuggestionSettings']['ChannelID']}/"
-                                                   f"{suggestion.message_id}) suggestion.")
-
-            elif (unique_vote is not None) and (vote_type == "down_vote" and unique_vote.up_vote == 1):
-                unique_vote.down_vote += 1
+            elif vote_type == "down_vote":
                 suggestion.down_votes += 1
-                unique_vote.up_vote -= 1
-                suggestion.up_votes -= 1
-
-                await interaction.response.send_message("You have changed your vote to a down vote", ephemeral=True)
-                await suggestion_logs_channel.send(f"{interaction.user.mention} has down voted [this]("
-                                                   f"https://discord.com/channels/"
-                                                   f"{CONFIG['GuildID']}/"
-                                                   f"{CONFIG['SuggestionSettings']['ChannelID']}/"
-                                                   f"{suggestion.message_id}) suggestion.")
-
-            elif (unique_vote is not None) and (vote_type == "reset"):
-                if unique_vote.up_vote == 1:
+            elif vote_type == "reset":
+                if unique_vote.up_vote:
                     suggestion.up_votes -= 1
-                elif unique_vote.down_vote == 1:
+                elif unique_vote.down_vote:
                     suggestion.down_votes -= 1
 
-                session.delete(unique_vote)
-
-                await interaction.response.send_message("Your vote has been reset, please cast another", ephemeral=True)
-                await suggestion_logs_channel.send(f"{interaction.user.mention} has reset their vote on [this]("
-                                                   f"https://discord.com/channels/"
-                                                   f"{CONFIG['GuildID']}/"
-                                                   f"{CONFIG['SuggestionSettings']['ChannelID']}/"
-                                                   f"{suggestion.message_id}) suggestion.")
+            await send_vote_msg(*vote_messages[vote_type])
 
             session.commit()
 
             suggestion = session.query(Suggestions).filter(
                 Suggestions.message_id == str(interaction.message.id)).first()
-
             suggestion_message = await suggestions_channel.fetch_message(int(suggestion.message_id))
-
             suggestion_author = await interaction.client.fetch_user(int(suggestion.author_id))
             author_mention = suggestion_author.mention if suggestion_author else "Unknown"
 
@@ -174,7 +138,8 @@ class SuggestionsButtons(ui.View):
             suggestion_author = await interaction.client.fetch_user(int(suggestion.author_id))
             author_mention = suggestion_author.mention if suggestion_author else "Unknown"
 
-            suggestion_embed = discord.Embed(description=f":bulb: **Suggestion (#{suggestion.suggestion_id}) Accepted**",
+            suggestion_embed = discord.Embed(description=f":bulb: **Suggestion (#{suggestion.suggestion_id}) "
+                                                         f"Accepted**",
                                              color=int(CONFIG["SuggestionStatusesEmbedColors"]["Accepted"].replace(
                                                  "#", ""), 16),
                                              timestamp=dt.datetime.utcnow())
@@ -217,7 +182,8 @@ class SuggestionsButtons(ui.View):
             suggestion_author = await interaction.client.fetch_user(int(suggestion.author_id))
             author_mention = suggestion_author.mention if suggestion_author else "Unknown"
 
-            suggestion_embed = discord.Embed(description=f":bulb: **Suggestion (#{suggestion.suggestion_id}) Rejected**",
+            suggestion_embed = discord.Embed(description=f":bulb: **Suggestion (#{suggestion.suggestion_id}) "
+                                                         f"Rejected**",
                                              color=int(CONFIG["SuggestionStatusesEmbedColors"]["Rejected"].replace(
                                                  "#", ""), 16),
                                              timestamp=dt.datetime.utcnow())
