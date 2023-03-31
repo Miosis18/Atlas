@@ -21,6 +21,32 @@ class SuggestionsButtons(ui.View):
         self.acceptable_roles = CONFIG["SuggestionSettings"]["AllowedRoles"]
 
     @staticmethod
+    async def create_suggestion_embed(interaction, suggestion, status, color):
+        suggestion_author = await interaction.client.fetch_user(int(suggestion.author_id))
+        author_mention = suggestion_author.mention if suggestion_author else "Unknown"
+
+        embed = discord.Embed(description=f":bulb: **Suggestion (#{suggestion.suggestion_id}) {status}**",
+                              color=int(color.replace("#", ""), 16),
+                              timestamp=dt.datetime.utcnow())
+        embed.set_thumbnail(url=interaction.user.display_avatar.url)
+        embed.add_field(name="• Suggestion", value=f"> ```{suggestion.content}```", inline=False)
+        embed.add_field(name="• Information", value=f">>> **From:** {author_mention}\n"
+                                                    f"**Upvotes:** {suggestion.up_votes}\n"
+                                                    f"**Downvotes:** {suggestion.down_votes}\n"
+                                                    f"**Status:** \U0001F7E2 {status}",
+                        inline=False)
+        embed.set_footer(icon_url=interaction.user.display_avatar.url,
+                         text=f"{interaction.user.name}#{interaction.user.discriminator}")
+        return embed
+
+    @staticmethod
+    def get_channel_url(message_id):
+        return (f"https://discord.com/channels/"
+                f"{CONFIG['GuildID']}/"
+                f"{CONFIG['SuggestionSettings']['ChannelID']}/"
+                f"{message_id}")
+
+    @staticmethod
     async def _vote(interaction, vote_type):
         async def send_vote_msg(msg, mention):
             await interaction.response.send_message(msg, ephemeral=True)
@@ -108,9 +134,8 @@ class SuggestionsButtons(ui.View):
             await interaction.response.send_message(f"You have already {'up' if vote_type == 'up_vote' else 'down'} "
                                                     f"voted this suggestion.", ephemeral=True)
 
-    @staticmethod
-    async def _handle_suggestion(interaction, status):
-        if any(str(role.id) in SuggestionsButtons().acceptable_roles for role in interaction.user.roles):
+    async def _handle_suggestion(self, interaction, status):
+        if any(str(role.id) in self.acceptable_roles for role in interaction.user.roles):
             suggestion_logs_channel = await interaction.client.fetch_channel(
                 CONFIG["SuggestionSettings"]["LogsChannelID"])
             suggestion = session.query(Suggestions).filter(Suggestions.message_id ==
@@ -120,43 +145,17 @@ class SuggestionsButtons(ui.View):
             session.commit()
 
             color = CONFIG["SuggestionStatusesEmbedColors"][status]
-            suggestion_embed = SuggestionsButtons().create_suggestion_embed(interaction, suggestion, status, color)
+            suggestion_embed = await self.create_suggestion_embed(interaction, suggestion, status, color)
 
             await interaction.response.send_message(f"You successfully {status.lower()}ed [this]("
-                                                    f"{SuggestionsButtons().get_channel_url(suggestion.message_id)}) "
-                                                    f"suggestion.")
+                                                    f"{self.get_channel_url(suggestion.message_id)}) suggestion.",
+                                                    ephemeral=True)
             await suggestion_logs_channel.send(f"{interaction.user.mention} has {status.lower()}ed [this]("
-                                               f"{SuggestionsButtons().get_channel_url(suggestion.message_id)}) "
-                                               f"suggestion.")
+                                               f"{self.get_channel_url(suggestion.message_id)}) suggestion.")
             await interaction.message.edit(embed=suggestion_embed, view=None)
         else:
-            await interaction.response.send_message("You are not allowed to accept or deny suggestions.")
-
-    @staticmethod
-    async def create_suggestion_embed(interaction, suggestion, status, color):
-        suggestion_author = await interaction.client.fetch_user(int(suggestion.author_id))
-        author_mention = suggestion_author.mention if suggestion_author else "Unknown"
-
-        embed = discord.Embed(description=f":bulb: **Suggestion (#{suggestion.suggestion_id}) {status}**",
-                              color=int(color.replace("#", ""), 16),
-                              timestamp=dt.datetime.utcnow())
-        embed.set_thumbnail(url=interaction.user.display_avatar.url)
-        embed.add_field(name="• Suggestion", value=f"> ```{suggestion.content}```", inline=False)
-        embed.add_field(name="• Information", value=f">>> **From:** {author_mention}\n"
-                                                    f"**Upvotes:** {suggestion.up_votes}\n"
-                                                    f"**Downvotes:** {suggestion.down_votes}\n"
-                                                    f"**Status:** \U0001F7E2 {status}",
-                        inline=False)
-        embed.set_footer(icon_url=interaction.user.display_avatar.url,
-                         text=f"{interaction.user.name}#{interaction.user.discriminator}")
-        return embed
-
-    @staticmethod
-    def get_channel_url(message_id):
-        return (f"https://discord.com/channels/"
-                f"{CONFIG['GuildID']}/"
-                f"{CONFIG['SuggestionSettings']['ChannelID']}/"
-                f"{message_id}")
+            await interaction.response.send_message("You are not allowed to accept or deny suggestions.",
+                                                    ephemeral=True)
 
     @discord.ui.button(label="Upvote", style=discord.ButtonStyle.secondary, emoji="\U00002b06")
     async def upvote(self, interaction: discord.Interaction, button: discord.ui.Button):
