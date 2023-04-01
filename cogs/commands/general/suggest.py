@@ -24,6 +24,7 @@ class SuggestionsButtons(ui.View):
     async def create_suggestion_embed(interaction, suggestion, status, color):
         suggestion_author = await interaction.client.fetch_user(int(suggestion.author_id))
         author_mention = suggestion_author.mention if suggestion_author else "Unknown"
+        status_emoji = "\U0001F7E2" if status.lower() == 'accepted' else "\U0001F534"
 
         embed = discord.Embed(description=f":bulb: **Suggestion (#{suggestion.suggestion_id}) {status}**",
                               color=int(color.replace("#", ""), 16),
@@ -33,7 +34,7 @@ class SuggestionsButtons(ui.View):
         embed.add_field(name="• Information", value=f">>> **From:** {author_mention}\n"
                                                     f"**Upvotes:** {suggestion.up_votes}\n"
                                                     f"**Downvotes:** {suggestion.down_votes}\n"
-                                                    f"**Status:** \U0001F7E2 {status}",
+                                                    f"**Status:** {status_emoji} {status}",
                         inline=False)
         embed.set_footer(icon_url=interaction.user.display_avatar.url,
                          text=f"{interaction.user.name}#{interaction.user.discriminator}")
@@ -131,8 +132,12 @@ class SuggestionsButtons(ui.View):
             await suggestion_message.edit(embed=suggestion_embed)
 
         else:
-            await interaction.response.send_message(f"You have already {'up' if vote_type == 'up_vote' else 'down'} "
-                                                    f"voted this suggestion.", ephemeral=True)
+            if vote_type == "reset":
+                await interaction.response.send_message(f"You cannot reset your vote as you have not cast one yet, "
+                                                        f"please cast one first.", ephemeral=True)
+            else:
+                await interaction.response.send_message(f"You have already {'up' if vote_type == 'up_vote' else 'down'}"
+                                                        f" voted this suggestion.", ephemeral=True)
 
     async def _handle_suggestion(self, interaction, status):
         if any(str(role.id) in self.acceptable_roles for role in interaction.user.roles):

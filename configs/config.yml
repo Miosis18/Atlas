@@ -68,7 +68,7 @@ SuggestionSettings:
 SuggestionStatusesEmbedColors:
   Pending: "#E67E22"
   Accepted: "#2ECC71"
-  Denied: "#E74C3C"
+  Rejected: "#E74C3C"
 
 # Define the different buttons that will be available for each suggestion
 SuggestionUpvote:
