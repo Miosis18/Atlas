@@ -13,6 +13,23 @@ class Members(Base):
     username = Column(String(100), nullable=False)
     date_joined = Column(String(100), nullable=False)
 
+    bans = relationship("Bans", backref="member_bans")
+
+    def get_id(self):
+        return self.member_id
+
+
+class Bans(Base):
+    __tablename__ = "bans"
+
+    punishment_id = Column(Integer, primary_key=True)
+    member_id = Column(Integer, ForeignKey('members.member_id'), nullable=False)
+    duration = Column(String(100), nullable=False)
+    reason = Column(String(100), nullable=False)
+    date_banned = Column(String(100), nullable=False)
+    date_of_unban = Column(String(100), nullable=False)
+    unban_timestamp = Column(String(100), nullable=False)
+
     def get_id(self):
         return self.member_id
 
@@ -31,7 +48,7 @@ class Suggestions(Base):
     unique_votes = relationship("SuggestionVotes", backref="unique_votes", cascade="all, delete")
 
     def get_id(self):
-        return self.suggestion_id
+        return self.punishment_id
 
 
 class SuggestionVotes(Base):
