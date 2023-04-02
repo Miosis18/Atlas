@@ -27,22 +27,25 @@ class AddRole(commands.Cog):
     @app_commands.default_permissions(manage_roles=True)
     async def add_role(self, interaction: discord.Interaction, user: discord.Member, role: discord.Role) -> None:
 
-        if role not in user.roles:
-            if interaction.user.id != user.id:
-                if interaction.user.roles[-1].position >= role.position:
-                    try:
-                        await user.add_roles(role)
-                        await interaction.response.send_message("Role added")
-                    except discord.errors.Forbidden:
-                        await interaction.response.send_message("I cannot add this role as I do not have a role "
-                                                                "high enough to do this.", ephemeral=True)
-                else:
-                    await interaction.response.send_message("You cannot do this as you do not have permission to "
-                                                            "promote someone this high", ephemeral=True)
-            else:
-                await interaction.response.send_message("You cannot add roles to yourself", ephemeral=True)
-        else:
+        if role in user.roles:
             await interaction.response.send_message("They already have the role", ephemeral=True)
+            return
+
+        if interaction.user.id == user.id:
+            await interaction.response.send_message("You cannot add roles to yourself", ephemeral=True)
+            return
+
+        if interaction.user.roles[-1].position < role.position:
+            await interaction.response.send_message("You cannot do this as you do not have permission to "
+                                                    "promote someone this high", ephemeral=True)
+            return
+
+        try:
+            await user.add_roles(role)
+            await interaction.response.send_message("Role added")
+        except discord.errors.Forbidden:
+            await interaction.response.send_message("I cannot add this role as I do not have a role "
+                                                    "high enough to do this.", ephemeral=True)
 
 
 async def setup(bot: commands.Bot) -> None:
