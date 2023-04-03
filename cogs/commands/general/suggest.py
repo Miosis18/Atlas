@@ -15,6 +15,7 @@ GUILD_ID = int(CONFIG["GuildID"])
 session = get_session()
 
 
+# Error with multiple votes from different users
 class SuggestionsButtons(ui.View):
     def __init__(self):
         super().__init__(timeout=None)
