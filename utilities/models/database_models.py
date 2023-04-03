@@ -9,7 +9,7 @@ class Members(Base):
     __tablename__ = "members"
 
     member_id = Column(Integer, primary_key=True)
-    user_id = Column(String(100), nullable=False)
+    user_id = Column(String(100), nullable=False, unique=True)
     username = Column(String(100), nullable=False)
     date_joined = Column(String(100), nullable=False)
 
@@ -24,8 +24,8 @@ class Bans(Base):
 
     punishment_id = Column(Integer, primary_key=True)
     member_id = Column(Integer, ForeignKey('members.member_id'), nullable=False)
-    duration = Column(String(100), nullable=False)
-    reason = Column(String(100), nullable=False)
+    duration = Column(String(500), nullable=False)
+    reason = Column(String(1000), nullable=False)
     date_banned = Column(String(100), nullable=False)
     date_of_unban = Column(String(100), nullable=False)
     unban_timestamp = Column(String(100), nullable=False)

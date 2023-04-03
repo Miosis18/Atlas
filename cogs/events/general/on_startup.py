@@ -1,5 +1,6 @@
 import os
 import yaml
+import pytz
 import datetime as dt
 from discord.ext import commands
 from utilities.management.database.database_management import get_session
@@ -24,11 +25,11 @@ class OnStartup(commands.Cog):
         guild = await self.Bot.fetch_guild(CONFIG["GuildID"])
 
         async for member in guild.fetch_members():
-            if member.id not in [member_db_entry.member_id for member_db_entry in members_in_database]:
+            if str(member.id) not in [member_db_entry.user_id for member_db_entry in members_in_database]:
                 new_member_entry = Members(
                     user_id=member.id,
-                    username=member.display_name,
-                    date_joined=dt.datetime.now().date().strftime("%d-%m-%Y")
+                    username=f"{member.display_name}#{member.discriminator}",
+                    date_joined=dt.datetime.now(pytz.utc).date().strftime("%d-%m-%Y")
                 )
                 session.add(new_member_entry)
 
