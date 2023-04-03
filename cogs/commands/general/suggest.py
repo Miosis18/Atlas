@@ -60,8 +60,8 @@ class SuggestionsButtons(ui.View):
         suggestion_logs_channel = await interaction.client.fetch_channel(CONFIG["SuggestionSettings"]["LogsChannelID"])
         suggestion = session.query(Suggestions).filter(Suggestions.message_id == str(interaction.message.id)).first()
         unique_vote = session.query(SuggestionVotes).filter(
-            (SuggestionVotes.suggestion_id == suggestion.suggestion_id) and (
-                        SuggestionVotes.voter_id == interaction.user.id)).first()
+            (SuggestionVotes.suggestion_id == suggestion.suggestion_id) &
+            (SuggestionVotes.voter_id == interaction.user.id)).first()
 
         vote_messages = {
             "up_vote": ("You have up-voted this suggestion", "has up-voted"),
