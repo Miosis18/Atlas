@@ -1,4 +1,3 @@
-
 import discord
 import os
 import yaml
@@ -21,13 +20,15 @@ class Purge(commands.Cog):
     async def on_ready(self):
         print(f"[COMMAND] {os.path.basename(__file__)} loaded.")
 
-    # Suggest command
+    # Purge command
 
     @app_commands.command(name="purge", description="Get random advice")
     @app_commands.guilds(discord.Object(id=GUILD_ID))
-    async def purge(self, interaction: discord.Interaction) -> None:
+    @app_commands.default_permissions(manage_messages=True)
+    async def purge(self, interaction: discord.Interaction, amount: int) -> None:
 
-        pass
+        await interaction.response.send_message(f"I have deleted {amount} messages.", ephemeral=True)
+        await interaction.channel.purge(limit=amount)
 
 
 async def setup(bot: commands.Bot) -> None:
