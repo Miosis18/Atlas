@@ -27,7 +27,11 @@ class ASCII(commands.Cog):
     @app_commands.guilds(discord.Object(id=GUILD_ID))
     async def ascii(self, interaction: discord.Interaction, text: str) -> None:
 
-        await interaction.response.send_message(f"```{figlet_format(text, font='starwars')}```")
+        try:
+            await interaction.response.send_message(f"```{figlet_format(text, font='starwars')}```")
+        except discord.app_commands.errors.CommandInvokeError:
+            await interaction.response.send_message("That message is too long, please try again with a shorter message",
+                                                    ephemeral=True)
 
 
 async def setup(bot: commands.Bot) -> None:
