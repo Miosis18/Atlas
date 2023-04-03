@@ -29,7 +29,7 @@ class ASCII(commands.Cog):
 
         try:
             await interaction.response.send_message(f"```{figlet_format(text, font='starwars')}```")
-        except discord.app_commands.errors.CommandInvokeError:
+        except discord.errors.HTTPException:
             await interaction.response.send_message("That message is too long, please try again with a shorter message",
                                                     ephemeral=True)
 
