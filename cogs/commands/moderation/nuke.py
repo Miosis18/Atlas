@@ -20,13 +20,21 @@ class Nuke(commands.Cog):
     async def on_ready(self):
         print(f"[COMMAND] {os.path.basename(__file__)} loaded.")
 
-    # Suggest command
+    # Nuke command
 
     @app_commands.command(name="nuke", description="Get random advice")
     @app_commands.guilds(discord.Object(id=GUILD_ID))
     async def nuke(self, interaction: discord.Interaction) -> None:
 
-        pass
+        guild = await interaction.client.fetch_guild(CONFIG["GuildID"])
+        new_channel = await guild.create_text_channel(name=interaction.channel.name,
+                                                      category=interaction.channel.category,
+                                                      position=interaction.channel.position,
+                                                      overwrites=interaction.channel.overwrites)
+        await interaction.channel.delete()
+        await new_channel.send(f"This channel was nuked by {interaction.user.mention}")
+        await new_channel.send(
+            "https://media1.tenor.com/images/e275783c9a40b4551481a75a542cdc79/tenor.gif?itemid=3429833")
 
 
 async def setup(bot: commands.Bot) -> None:
