@@ -19,6 +19,18 @@ class Members(Base):
         return self.member_id
 
 
+class Warns(Base):
+    __tablename__ = "Warns"
+
+    punishment_id = Column(Integer, primary_key=True)
+    member_id = Column(Integer, ForeignKey('members.member_id'), nullable=False)
+    reason = Column(String(1000), nullable=False)
+    date_warned = Column(String(100), nullable=False)
+
+    def get_id(self):
+        return self.member_id
+
+
 class Bans(Base):
     __tablename__ = "bans"
 
