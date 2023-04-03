@@ -24,6 +24,7 @@ class Nuke(commands.Cog):
 
     @app_commands.command(name="nuke", description="Get random advice")
     @app_commands.guilds(discord.Object(id=GUILD_ID))
+    @app_commands.default_permissions(manage_messages=True)
     async def nuke(self, interaction: discord.Interaction) -> None:
 
         guild = await interaction.client.fetch_guild(CONFIG["GuildID"])
