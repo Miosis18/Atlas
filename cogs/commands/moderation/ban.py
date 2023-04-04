@@ -40,7 +40,11 @@ class Ban(commands.Cog):
             await interaction.response.send_message("You do not have permission to ban this person", ephemeral=True)
             return
 
-        total_duration, unban_date, human_readable_duration = await Punishments().calculate_duration(duration)
+        try:
+            total_duration, unban_date, human_readable_duration = await Punishments().calculate_duration(duration)
+        except ValueError:
+            await interaction.response.send_message("That is an invalid duration time, usage: 1d or 1d 12hr")
+            return
 
         member_in_database = session.query(Members).filter(Members.user_id == str(user.id)).first()
 

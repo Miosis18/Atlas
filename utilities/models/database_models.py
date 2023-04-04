@@ -13,6 +13,8 @@ class Members(Base):
     username = Column(String(100), nullable=False)
     date_joined = Column(String(100), nullable=False)
 
+    warns = relationship("Warns", backref="member_warns")
+    mutes = relationship("Mutes", backref="member_mutes")
     bans = relationship("Bans", backref="member_bans")
 
     def get_id(self):
@@ -20,12 +22,28 @@ class Members(Base):
 
 
 class Warns(Base):
-    __tablename__ = "Warns"
+    __tablename__ = "warns"
 
     punishment_id = Column(Integer, primary_key=True)
     member_id = Column(Integer, ForeignKey('members.member_id'), nullable=False)
     reason = Column(String(1000), nullable=False)
     date_warned = Column(String(100), nullable=False)
+
+    def get_id(self):
+        return self.member_id
+
+
+class Mutes(Base):
+    __tablename__ = "mutes"
+
+    punishment_id = Column(Integer, primary_key=True)
+    member_id = Column(Integer, ForeignKey('members.member_id'), nullable=False)
+    duration = Column(String(500), nullable=False)
+    reason = Column(String(1000), nullable=False)
+    date_muted = Column(String(100), nullable=False)
+    date_of_unmute = Column(String(100), nullable=False)
+    unmute_timestamp = Column(String(100), nullable=False)
+    mute_type = Column(String(100), nullable=False)
 
     def get_id(self):
         return self.member_id

@@ -24,7 +24,7 @@ class SlowMode(commands.Cog):
 
     @app_commands.command(name="slowmode", description="Get random advice")
     @app_commands.guilds(discord.Object(id=GUILD_ID))
-    @app_commands.default_permissions(manage_messages=True)
+    @app_commands.default_permissions(manage_channels=True)
     async def slow_mode(self, interaction: discord.Interaction, duration: int) -> None:
 
         if duration > 21600:

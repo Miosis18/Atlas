@@ -44,7 +44,10 @@ class Warn(commands.Cog):
             await NewMember().add_new_member_to_db(user)
             member_in_database = session.query(Members).filter(Members.user_id == str(user.id)).first()
 
-        await interaction.response.send_message(f"{user.mention} has been warned by {interaction.user.mention}")
+        total_warnings = len(session.query(Warns).filter(Warns.member_id == member_in_database.member_id).all())
+
+        await interaction.response.send_message(f"{user.mention} has been warned by {interaction.user.mention}, "
+                                                f"they now have {total_warnings + 1} warnings.")
 
         new_warn = Warns(
             member_id=member_in_database.member_id,
