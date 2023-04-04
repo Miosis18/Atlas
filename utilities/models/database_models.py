@@ -16,6 +16,7 @@ class Members(Base):
     warns = relationship("Warns", backref="member_warns")
     mutes = relationship("Mutes", backref="member_mutes")
     bans = relationship("Bans", backref="member_bans")
+    unbans = relationship("UnBans", backref="member_unbans")
 
     def get_id(self):
         return self.member_id
@@ -59,6 +60,18 @@ class Bans(Base):
     date_banned = Column(String(100), nullable=False)
     date_of_unban = Column(String(100), nullable=False)
     unban_timestamp = Column(String(100), nullable=False)
+
+    def get_id(self):
+        return self.member_id
+
+
+class UnBans(Base):
+    __tablename__ = "unbans"
+
+    punishment_id = Column(Integer, primary_key=True)
+    member_id = Column(Integer, ForeignKey('members.member_id'), nullable=False)
+    reason = Column(String(1000), nullable=False)
+    date_of_unban = Column(String(100), nullable=False)
 
     def get_id(self):
         return self.member_id
